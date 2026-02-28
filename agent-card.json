@@ -1,0 +1,15 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "X-Powered Trend Oracle",
+  "description": "Real-time X sentiment deltas, whale moves, trend alpha for $0.49 via x402. Agents POST JSON to /oracle.",
+  "image": "https://x-powered-trend-oracle.vercel.app/logo.png",
+  "endpoints": [
+    {
+      "name": "oracle",
+      "endpoint": "https://x-powered-trend-oracle.vercel.app/oracle",
+      "version": "1.0"
+    }
+  ],
+  "evm_address": "0xBB539e2eB06feB996a8c97A4520068ec8d467Fb1",
+  "pricing": "0.49 USD per query"
+}
