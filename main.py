@@ -6,11 +6,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from openai import OpenAI
 import redis
-from fastapi_x402 import init_x402, pay
 
 load_dotenv()
 app = FastAPI(title="X-Powered Trend Oracle")
-init_x402(app, pay_to=os.getenv("PAY_TO_ADDRESS"), facilitator_url="https://x402.org/facilitator")
 
 client = OpenAI(
     api_key=os.getenv("GROK_API_KEY"),
@@ -20,7 +18,6 @@ client = OpenAI(
 r = redis.from_url(os.getenv("UPSTASH_REDIS_URL"), decode_responses=True)
 
 @app.post("/oracle")
-@pay("$0.49")
 async def oracle(request: Request):
     payload = await request.json()
     cache_key = hashlib.md5(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -44,7 +41,7 @@ Return STRICT JSON only. No text. Example: {{"sentiment_delta": "+23%", "whale_m
     
     try:
         result = eval(response.choices[0].message.content)
-        r.setex(cache_key, 300, json.dumps(result))  # cache 5min
+        r.setex(cache_key, 300, json.dumps(result))
         return JSONResponse(content=result)
     except:
         return JSONResponse(content={"error": "parse failed"}, status_code=500)
