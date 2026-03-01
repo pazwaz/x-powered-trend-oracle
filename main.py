@@ -2,7 +2,7 @@ import os
 import hashlib
 import json
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from openai import OpenAI
 import redis
@@ -17,8 +17,30 @@ client = OpenAI(
 
 r = redis.from_url(os.getenv("UPSTASH_REDIS_URL"), decode_responses=True)
 
+PAY_TO = os.getenv("PAY_TO_ADDRESS")
+PAY_AMOUNT = "0.49"
+
+def require_payment(request: Request):
+    payment_header = request.headers.get("x-payment")
+    if not payment_header or PAY_AMOUNT not in payment_header:
+        return Response(
+            content=json.dumps({
+                "error": "X-PAYMENT required",
+                "payTo": PAY_TO,
+                "amount": PAY_AMOUNT,
+                "network": "base"
+            }),
+            status_code=402,
+            media_type="application/json"
+        )
+    return None
+
 @app.post("/oracle")
 async def oracle(request: Request):
+    payment_check = require_payment(request)
+    if payment_check:
+        return payment_check
+    
     payload = await request.json()
     cache_key = hashlib.md5(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     cached = r.get(cache_key)
